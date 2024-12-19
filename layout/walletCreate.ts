@@ -43,7 +43,7 @@ export const wallet_create = async () => {
   const data = readJson()
   const LP_wallet_keypair = Keypair.fromSecretKey(bs58.decode(data.mainKp!))
 
-  // const batchLength = 15
+  // 20 wallets sol airdrop transaction
   const batchNum = 4
   try {
     let walletIndex = 1;
@@ -54,9 +54,7 @@ export const wallet_create = async () => {
         ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 250_000 })
       )
       for (let j = 0; j < ((bundleWalletNum - 1) / batchNum); j++) {
-        // if (i == 0 || j == 0) continue;
         let solAmount = swapSolAmount[walletIndex];
-        // if ((i * batchLength + j) >= bundleWalletNum) continue;
         sendSolTx.push(
           SystemProgram.transfer({
             fromPubkey: LP_wallet_keypair.publicKey,
