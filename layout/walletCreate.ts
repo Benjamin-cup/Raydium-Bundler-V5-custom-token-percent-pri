@@ -1,4 +1,4 @@
-import { ComputeBudgetProgram, Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction, TransactionInstruction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
+import { ComputeBudgetProgram, Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction, TransactionInstruction, TransactionMessage, VersionedTransaction, Connection } from "@solana/web3.js";
 import { newSendToken } from "../src/sendBulkToken";
 import { Data, mainMenuWaiting, readBundlerWallets, readJson, saveBundlerWalletsToFile, saveHolderWalletsToFile, sleep } from "../src/utils";
 import { connection } from "../config";
@@ -43,59 +43,61 @@ export const wallet_create = async () => {
   const data = readJson()
   const LP_wallet_keypair = Keypair.fromSecretKey(bs58.decode(data.mainKp!))
 
-  // const batchLength = 15
-  const batchNum = 4
+  // 20 wallets sol airdrop transaction
   try {
     let walletIndex = 1;
-    for (let i = 0; i < batchNum; i++) {
-      const sendSolTx: TransactionInstruction[] = []
+    const sendSolTx: TransactionInstruction[] = []
+    sendSolTx.push(
+      ComputeBudgetProgram.setComputeUnitLimit({ units: 100_000 }),
+      ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 250_000 })
+    )
+    for (let j = 0; j < (bundleWalletNum - 1); j++) {
+      let solAmount = swapSolAmount[walletIndex] * 10;
+      console.log(walletIndex);
+      console.log(swapSolAmount[walletIndex]);
+      console.log(walletKPs[walletIndex].publicKey);
       sendSolTx.push(
-        ComputeBudgetProgram.setComputeUnitLimit({ units: 100_000 }),
-        ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 250_000 })
+        SystemProgram.transfer({
+          fromPubkey: LP_wallet_keypair.publicKey,
+          toPubkey: walletKPs[walletIndex].publicKey,
+          lamports: Math.round((solAmount + 0.01) * LAMPORTS_PER_SOL)
+        })
       )
-      for (let j = 0; j < ((bundleWalletNum - 1) / batchNum); j++) {
-        // if (i == 0 || j == 0) continue;
-        let solAmount = swapSolAmount[walletIndex];
-        // if ((i * batchLength + j) >= bundleWalletNum) continue;
-        sendSolTx.push(
-          SystemProgram.transfer({
-            fromPubkey: LP_wallet_keypair.publicKey,
-            toPubkey: walletKPs[walletIndex].publicKey,
-            lamports: (solAmount + 0.01) * LAMPORTS_PER_SOL
-          })
-        )
-        walletIndex++;
-      }
-      let index = 0
-      while (true) {
-        try {
-          if (index > 3) {
-            console.log("Error in distribution")
-            return null
-          }
-          const siTx = new Transaction().add(...sendSolTx)
-          const latestBlockhash = await connection.getLatestBlockhash()
-          siTx.feePayer = LP_wallet_keypair.publicKey
-          siTx.recentBlockhash = latestBlockhash.blockhash
-          const messageV0 = new TransactionMessage({
-            payerKey: LP_wallet_keypair.publicKey,
-            recentBlockhash: latestBlockhash.blockhash,
-            instructions: sendSolTx,
-          }).compileToV0Message()
-          const transaction = new VersionedTransaction(messageV0)
-          transaction.sign([LP_wallet_keypair])
-          const txSig = await execute(transaction, latestBlockhash, 1)
-          const tokenBuyTx = txSig ? `https://solscan.io/tx/${txSig}` : ''
-          console.log("SOL distributed ", tokenBuyTx)
-          break
-        } catch (error) {
-          index++
+      walletIndex++;
+    }
+
+    let index = 0
+    while (true) {
+      try {
+        if (index > 3) {
+          console.log("Error in distribution")
+          return null
         }
+        const siTx = new Transaction().add(...sendSolTx)
+        const latestBlockhash = await connection.getLatestBlockhash()
+        siTx.feePayer = LP_wallet_keypair.publicKey
+        siTx.recentBlockhash = latestBlockhash.blockhash
+
+        console.log(await connection.simulateTransaction(siTx))
+        const messageV0 = new TransactionMessage({
+          payerKey: LP_wallet_keypair.publicKey,
+          recentBlockhash: latestBlockhash.blockhash,
+          instructions: sendSolTx,
+        }).compileToV0Message()
+        const transaction = new VersionedTransaction(messageV0)
+        transaction.sign([LP_wallet_keypair])
+        const txSig = await execute(transaction, latestBlockhash, 1)
+        const tokenBuyTx = txSig ? `https://solscan.io/tx/${txSig}` : ''
+        console.log("SOL distributed ", tokenBuyTx)
+        break
+      } catch (error) {
+        index++
       }
     }
+
     console.log("Successfully distributed sol to bundler wallets!")
   } catch (error) {
-    console.log(`Failed to transfer SOL`)
+    console.log("Failed to transfer SOL", error)
   }
 
   mainMenuWaiting()

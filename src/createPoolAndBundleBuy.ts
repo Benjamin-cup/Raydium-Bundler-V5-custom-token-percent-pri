@@ -282,7 +282,6 @@ export async function txCreateNewPoolAndBundleBuy() {
                 ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 744_452 }),
                 ComputeBudgetProgram.setComputeUnitLimit({ units: 1_183_504 })
             ]
-
             for (let j = 0; j < batchSize; j++) {
                 // const walletTokenAccounts = await getWalletTokenAccount(connection, walletKPs[i * 7 + j].publicKey)
 
@@ -299,7 +298,7 @@ export async function txCreateNewPoolAndBundleBuy() {
                             tokenAccountOut: baseAta,
                             owner: keypair.publicKey,
                         },
-                        amountIn: new BN(swapSolAmount * 10 ** 9),
+                        amountIn: new BN(Math.round(swapSolAmount[i * 7 + j] * 10 ** 9)),
                         minAmountOut: 0,
                     },
                     poolKeys.version,
