@@ -32,6 +32,7 @@ import {
     quote_Mint_amount,
     input_baseMint_tokens_percentage,
     // swapWallets,
+    defaltSwapSolAmount,
     swapSolAmount,
     bundlerWalletName,
     batchSize
@@ -53,6 +54,11 @@ export async function extendLutSimulate() {
     const LP_wallet_keypair = Keypair.fromSecretKey(new Uint8Array(bs58.decode(data.mainKp!)));
 
     console.log("LP Wallet Address: ", LP_wallet_keypair.publicKey.toString());
+    console.log("wallets==========", wallets)
+    console.log("data==========", data)
+    console.log("lutAddress==========", lutAddress)
+    console.log("walletKPs==========", walletKPs)
+    console.log("lookupTableAddress==========", lookupTableAddress)
 
     let params: any = {
         mint: data.mint ? new PublicKey(data.mint) : null,
@@ -76,7 +82,7 @@ export async function extendLutSimulate() {
         mainMenuWaiting();
     } else {
         const marketBufferInfo = await connection.getAccountInfo(params.marketId);
-        // console.log("🚀 ~ txCreateNewPoolAndBundleBuy ~ marketBufferInfo:", marketBufferInfo)
+        console.log("🚀 ~ txCreateNewPoolAndBundleBuy ~ marketBufferInfo:", marketBufferInfo)
         if (!marketBufferInfo) return;
         const {
             baseMint,
@@ -261,7 +267,7 @@ export async function extendLutSimulate() {
             await connection.getAddressLookupTable(lookupTableAddress)
         ).value;
 
-        const inputTokenAmount = new TokenAmount(DEFAULT_TOKEN.WSOL, (swapSolAmount * (10 ** quoteDecimals)))
+        const inputTokenAmount = new TokenAmount(DEFAULT_TOKEN.WSOL, (defaltSwapSolAmount * (10 ** quoteDecimals)))
         // const minAmountOut = new TokenAmount(TOKEN_TYPE, 1)
 
         const baseInfo = await getMint(connection, baseMint)
@@ -301,7 +307,7 @@ export async function extendLutSimulate() {
                             tokenAccountOut: baseAta,
                             owner: keypair.publicKey,
                         },
-                        amountIn: new BN(swapSolAmount * 10 ** 9),
+                        amountIn: new BN(Math.round(swapSolAmount[i * 7 + j] * 10 ** 9)),
                         minAmountOut: 0,
                     },
                     poolKeys.version,

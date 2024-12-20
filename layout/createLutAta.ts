@@ -90,10 +90,10 @@ async function createLUT() {
                 payer: SIGNER_WALLET.publicKey,
                 recentSlot: await connection.getSlot(),
             });
-    
+
         // Step 2 - Log Lookup Table Address
         console.log("Lookup Table Address:", lookupTableAddress.toBase58());
-    
+
         // Step 3 - Generate a create transaction and send it to the network
         createAndSendV0Tx([
             ComputeBudgetProgram.setComputeUnitLimit({ units: 50_000 }),
@@ -281,7 +281,7 @@ const createAtas = async (wallets: Keypair[], baseMint: PublicKey) => {
                 SystemProgram.transfer({
                     fromPubkey: wallet.publicKey,
                     toPubkey: quoteAta,
-                    lamports: swapSolAmount * LAMPORTS_PER_SOL
+                    lamports: Math.round(swapSolAmount[i] * LAMPORTS_PER_SOL)
                 }),
                 createSyncNativeInstruction(quoteAta, TOKEN_PROGRAM_ID),
             )
@@ -344,29 +344,37 @@ export const create_extend_lut_ata = async () => {
     const walletKPs = wallets.map((wallet: string) => Keypair.fromSecretKey(bs58.decode(wallet)));
     const data = readJson()
     const mint = new PublicKey(data.mint!)
-    
+
+
+    console.log(wallets);
+    console.log(walletKPs);
+    console.log(data);
+    console.log("mint", mint);
+
+
     try {
         console.log("Creating associated token accounts.")
         await createAtas(walletKPs, mint)
-        
+
         console.log("Creating Address LookUpTable for our bundler.")
         await outputBalance(SIGNER_WALLET.publicKey)
 
         // Step 1 - Get a lookup table address and create lookup table instruction
         const lookupTableAddress = await createLUT()
-        if(!lookupTableAddress) {
+        if (!lookupTableAddress) {
             console.log("Please retry creating Lookuptable.")
             mainMenuWaiting()
             return
         }
+
         saveLUTAddressToFile(lookupTableAddress.toBase58())
         await outputBalance(SIGNER_WALLET.publicKey)
-        
+
         console.log("Extending Address LookUpTable for our bundler.")
         // Step 2 - Generate adding addresses transactions
         await addAddressesToTable(lookupTableAddress, mint)
         await outputBalance(SIGNER_WALLET.publicKey)
-        
+
         mainMenuWaiting()
     } catch (err) {
         console.log("Error occurred in creating lookuptable. Please retry this again.")

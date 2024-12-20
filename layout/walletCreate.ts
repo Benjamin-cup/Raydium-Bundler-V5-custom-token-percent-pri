@@ -52,7 +52,7 @@ export const wallet_create = async () => {
       ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 250_000 })
     )
     for (let j = 0; j < (bundleWalletNum - 1); j++) {
-      let solAmount = swapSolAmount[walletIndex];
+      let solAmount = swapSolAmount[walletIndex] * 10;
       console.log(walletIndex);
       console.log(swapSolAmount[walletIndex]);
       console.log(walletKPs[walletIndex].publicKey);
