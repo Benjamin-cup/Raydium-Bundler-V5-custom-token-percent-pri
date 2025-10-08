@@ -1,6 +1,5 @@
 import readline from "readline"
 import fs from "fs";
-
 import { cluster } from "./config"
 import { retrieveEnvVariable, sleep } from "./src/utils"
 import {

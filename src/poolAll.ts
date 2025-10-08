@@ -32,8 +32,6 @@ export const SPL_ACCOUNT_LAYOUT = struct<any>([
   publicKey('closeAuthority')
 ]);
 
-
-
 export const rayFee = cluster == "devnet"? new PublicKey("3XMrhbv989VxAMi3DErLV9eJht1pHppW5LbKxe9fkEFR") : new PublicKey("7YttLkHDoNj9wyDur5pM1ejNaAvT9X4eqaYcHQqtj2G5");
 // export const tipAcct = cluster == "devnet"? new PublicKey("3XMrhbv989VxAMi3DErLV9eJht1pHppW5LbKxe9fkEFR") :new PublicKey("Cw8CFyM9FkoMi7K7Crf6HNQqf4uEMzpKw6QNghXLvLkY");
 export const RayLiqPoolv4 = cluster == "devnet"? new PublicKey("HWy1jotHpo6UqeQxx49dpYYdQB8wj9Qk9MdxwjLvDHB8") : new PublicKey("675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8");
